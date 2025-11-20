@@ -6,18 +6,47 @@ namespace Konzolna_aplikacija_za_upravljanje_aerodromom
     {
         static void Main(string[] args)
         {
-            var p = new Passenger("Ivan", "Ivić", 2001, "ivan@ivic", "1234");
-            Console.WriteLine("Ime:{0},Prezime:{1},Godina:{2},Email:{3},Lozinka:{4},id:{5}\n",p.FirstName,p.LastName,p.BirthYear,p.Email,p.Password,p.Id);
-            var a = new Airplane("Boing 747", 1990, 50, 20, 10);
-            Console.WriteLine(a.FullInfo());
-            var cm = new CrewMember("Marko", "Markić", 2000, Position.Pilot);
-            var cm1 = new CrewMember("Karlo", "Karlić", 2001, Position.Copilot);
-            var cm2 = new CrewMember("Ana", "Anić", 2002, Position.Stewardess);
-            var cm3 = new CrewMember("Iva", "Ivić", 2003, Position.Stewardess);
-            Console.WriteLine(cm.ShortInfo());
-            var c = new Crew(cm.Id, cm1.Id,new List<Guid>{ cm2.Id, cm3.Id });
-            Console.WriteLine(c.FullInfo());
-            
+            var store = new DataStore();
+            store.Seed();
+
+            Console.WriteLine("=== PUTNICI ===");
+            foreach (var p in store.Passengers)
+                Console.WriteLine($"{p.Id} | {p.FirstName} {p.LastName} | {p.Email}");
+
+            Console.WriteLine();
+
+            Console.WriteLine("=== AVIONI ===");
+            foreach (var a in store.Airplanes)
+                Console.WriteLine(a.FullInfo());
+
+            Console.WriteLine();
+
+            Console.WriteLine("=== CLANOVI POSADE ===");
+            foreach (var cm in store.CrewMembers)
+                Console.WriteLine(cm.ShortInfo());
+
+            Console.WriteLine();
+
+            Console.WriteLine("=== POSADE ===");
+            foreach (var c in store.Crews)
+                Console.WriteLine(c.FullInfo());
+
+            Console.WriteLine();
+
+            Console.WriteLine("=== LETOVI ===");
+            foreach (var f in store.Flights)
+            {
+                Console.WriteLine(f.FullInfo(store));
+                Console.WriteLine("-----");
+            }
+
+            Console.WriteLine("TEST REZERVACIJA NA PRVOM LETU");
+            var firstFlight = store.Flights[0];
+            Console.WriteLine("Broj zauzetih rezervacija: " + firstFlight.Reservations.Count);
+            Console.WriteLine("Dostupnih standard sjedala: " + firstFlight.GetAvailableSeatsByCategory(store, SeatCategory.Standard));
+            Console.WriteLine("Let pun? " + firstFlight.IsFull(store));
+
+            Console.ReadLine();
         }
     }
 }
