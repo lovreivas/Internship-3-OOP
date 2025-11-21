@@ -14,7 +14,7 @@ namespace Konzolna_aplikacija_za_upravljanje_aerodromom
                 Console.WriteLine("Glavni izbornik:\n1 - Putnici\n2 - Letovi\n3 - Avioni\n4 - Posada\n5 - Izlaz iz programa");
                 var key = Console.ReadLine();
                 if (key == "1") PassengersMenu();
-                else if (key == "2") ;// FlightsMenu();
+                else if (key == "2") FlightsMenu();
                 else if (key == "3") ;// AirplanesMenu();
                 else if (key == "4") ;// CrewsMenu();
                 else if (key == "5") break;
@@ -219,6 +219,127 @@ namespace Konzolna_aplikacija_za_upravljanje_aerodromom
                     Input.Pause();
                 }
                 else if (k == "5") break;
+            }
+        }
+        static void FlightsMenu()
+        {
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine("Letovi:\n1 - Prikaz svih letova\n2 - Dodavanje leta\n3 - Pretraživanje letova\n4 - Uređivanje leta\n5 - Brisanje leta\n6 - Povratak");
+                var k = Console.ReadLine();
+                if (k == "1")
+                {
+                    Console.Clear();
+                    foreach (var f in Store.Flights) Console.WriteLine(f.ShortInfo());
+                    Input.Pause();
+                }
+                else if (k == "2")
+                {
+                    Console.Clear();
+                    var name = Input.ReadRoute("Naziv leta (start-end): ");
+                    Console.WriteLine("Odaberite avion:");
+                    foreach (var a in Store.Airplanes) Console.WriteLine(a.ShortInfo());
+                    var aid = Input.ReadGuid("Unesite id aviona: ");
+                    Airplane airplane = null;
+                    foreach (var a in Store.Airplanes) if (a.Id == aid) { airplane = a; break; }
+                    if (airplane == null) { Console.WriteLine("Avion nije pronađen."); Input.Pause(); continue; }
+                    DateTime dep;
+                    DateTime arr;
+                    while (true)
+                    {
+                        dep = Input.ReadDateTime("Vrijeme polaska (yyyy-MM-dd HH:mm): ");
+                        arr = Input.ReadDateTime("Vrijeme dolaska (yyyy-MM-dd HH:mm): ");
+
+                        if (arr > dep) break;
+
+                        Console.WriteLine("Vrijeme dolaska mora biti nakon vremena polaska. Pokušajte ponovno.");
+                    }
+                    var dist = Input.ReadIntRange("Udaljenost (km): ", 1, 100000);
+                    Console.WriteLine("Odaberite posadu: ");
+                    foreach (var c in Store.Crews) Console.WriteLine(c.ShortInfo());
+                    var cid = Input.ReadGuid("Unesite id posade: ");
+                    Crew crew = null;
+                    foreach (var c in Store.Crews) if (c.Id == cid) { crew = c; break; }
+                    if (crew == null) { Console.WriteLine("Posada nije pronađena."); Input.Pause(); continue; }
+                    Console.Write("Želite li stvarno dodati let y/n? ");
+                    if (!Confirm()) { Console.WriteLine("Prekinuto."); Input.Pause(); continue; }
+                    var flight = new Flight(name, dep, arr, dist, airplane.Id, crew.Id);
+                    Store.Flights.Add(flight);
+                    Console.WriteLine("Let dodan, id: " + flight.Id);
+                    Input.Pause();
+                }
+                else if (k == "3")
+                {
+                    Console.Clear();
+                    Console.WriteLine("1 - Po id-u\n2 - Po nazivu\n3 - Povratak");
+                    var c = Console.ReadLine();
+                    if (c == "1")
+                    {
+                        var id = Input.ReadGuid("Unesite id: ");
+                        var f = FindFlightById(id);
+                        if (f == null) Console.WriteLine("Ne postoji."); else Console.WriteLine(f.FullInfo(Store));
+                        Input.Pause();
+                    }
+                    else if (c == "2")
+                    {
+                        var name = Input.ReadNonEmpty("Unesite naziv: ");
+                        var list = FindFlightsByNameContains(name);
+                        if (list.Count == 0) Console.WriteLine("Ne postoji."); else foreach (var f in list) Console.WriteLine(f.FullInfo(Store));
+                        Input.Pause();
+                    }
+                }
+                else if (k == "4")
+                {
+                    Console.Clear();
+                    foreach (var f in Store.Flights) Console.WriteLine(f.ShortInfo());
+                    var id = Input.ReadGuid("Unesite id leta za uređivanje: ");
+                    var flight = FindFlightById(id);
+                    if (flight == null) { Console.WriteLine("Ne postoji."); Input.Pause(); continue; }
+                    DateTime dep;
+                    DateTime arr;
+                    while (true)
+                    {
+                        dep = Input.ReadDateTime("Novo vrijeme polaska (yyyy-MM-dd HH:mm): ");
+                        arr = Input.ReadDateTime("Novo vrijeme dolaska (yyyy-MM-dd HH:mm): ");
+
+                        if (arr > dep) break;
+
+                        Console.WriteLine("Vrijeme dolaska mora biti nakon vremena polaska. Pokušajte ponovno.");
+                    }
+                    Console.WriteLine("Dostupne posade:");
+                    foreach (var c in Store.Crews) Console.WriteLine(c.ShortInfo());
+                    var cid = Input.ReadGuid("Unesite id nove posade: ");
+                    Crew crew = null;
+                    foreach (var c in Store.Crews) if (c.Id == cid) { crew = c; break; }
+                    if (crew == null) { Console.WriteLine("Posada nije pronađena."); Input.Pause(); continue; }
+                    Console.Write("Želite li stvarno urediti let y/n? ");
+                    if (!Confirm()) { Console.WriteLine("Prekinuto."); Input.Pause(); continue; }
+                    flight.Departure = dep;
+                    flight.Arrival = arr;
+                    flight.CrewId = crew.Id;
+                    flight.UpdatedAt = DateTime.Now;
+                    Console.WriteLine("Uređeno.");
+                    Input.Pause();
+                }
+                else if (k == "5")
+                {
+                    Console.Clear();
+                    foreach (var f in Store.Flights) Console.WriteLine(f.ShortInfo());
+                    var id = Input.ReadGuid("Unesite id leta za brisanje: ");
+                    var flight = FindFlightById(id);
+                    if (flight == null) { Console.WriteLine("Ne postoji."); Input.Pause(); continue; }
+                    var totalCap = Store.GetTotalCapacityForFlight(flight);
+                    int resCount = flight.Reservations.Count;
+                    if (resCount >= totalCap / 2) { Console.WriteLine("Ne možete izbrisati let jer je više od 50% zauzeto."); Input.Pause(); continue; }
+                    if ((flight.Departure - DateTime.Now).TotalHours < 24) { Console.WriteLine("Ne možete izbrisati let koji polijeće za manje od 24h."); Input.Pause(); continue; }
+                    Console.Write("Želite li stvarno izbrisati let y/n? ");
+                    if (!Confirm()) { Console.WriteLine("Prekinuto."); Input.Pause(); continue; }
+                    Store.Flights.Remove(flight);
+                    Console.WriteLine("Let izbrisan.");
+                    Input.Pause();
+                }
+                else if (k == "6") break;
             }
         }
         static bool Confirm()

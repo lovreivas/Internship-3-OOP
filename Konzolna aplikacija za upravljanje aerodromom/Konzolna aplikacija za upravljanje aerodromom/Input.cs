@@ -99,5 +99,66 @@ namespace Konzolna_aplikacija_za_upravljanje_aerodromom
             Console.WriteLine("Pritisnite Enter za nastavak...");
             Console.ReadLine();
         }
+        public static string ReadRoute(string prompt)
+        {
+            while (true)
+            {
+                Console.Write(prompt);
+                var s = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(s))
+                {
+                    Console.WriteLine("Polje ne smije biti prazno.");
+                    continue;
+                }
+                s = s.Trim();
+                if (!s.Contains("-"))
+                {
+                    Console.WriteLine("Format mora biti start-end, npr. Split-Zagreb.");
+                    continue;
+                }
+                var parts = s.Split(new[] { '-' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length != 2)
+                {
+                    Console.WriteLine("Format mora biti točno start-end.");
+                    continue;
+                }
+                var a = parts[0].Trim();
+                var b = parts[1].Trim();
+                if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b))
+                {
+                    Console.WriteLine("Oba dijela moraju biti ne-prazna.");
+                    continue;
+                }
+                bool ok = true;
+                foreach (var ch in a)
+                {
+                    if (!char.IsLetter(ch))
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+                if (!ok)
+                {
+                    Console.WriteLine("Start smije sadržavati samo slova.");
+                    continue;
+                }
+                ok = true;
+                foreach (var ch in b)
+                {
+                    if (!char.IsLetter(ch))
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+                if (!ok)
+                {
+                    Console.WriteLine("End smije sadržavati samo slova.");
+                    continue;
+                }
+                return $"{a}-{b}";
+            }
+        }
     }
 }
