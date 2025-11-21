@@ -15,7 +15,7 @@ namespace Konzolna_aplikacija_za_upravljanje_aerodromom
                 var key = Console.ReadLine();
                 if (key == "1") PassengersMenu();
                 else if (key == "2") FlightsMenu();
-                else if (key == "3") ;// AirplanesMenu();
+                else if (key == "3") AirplanesMenu();
                 else if (key == "4") ;// CrewsMenu();
                 else if (key == "5") break;
             }
@@ -340,6 +340,101 @@ namespace Konzolna_aplikacija_za_upravljanje_aerodromom
                     Input.Pause();
                 }
                 else if (k == "6") break;
+            }
+        }
+        static void AirplanesMenu()
+        {
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine("Avioni:\n1 - Prikaz svih aviona\n2 - Dodavanje novog aviona\n3 - Pretraživanje aviona\n4 - Brisanje aviona\n5 - Povratak");
+                var k = Console.ReadLine();
+                if (k == "1")
+                {
+                    Console.Clear();
+                    foreach (var a in Store.Airplanes) Console.WriteLine(a.ShortInfo());
+                    Input.Pause();
+                }
+                else if (k == "2")
+                {
+                    Console.Clear();
+                    var name = Input.ReadNonEmpty("Naziv aviona: ");
+                    var year = Input.ReadIntRange("Godina proizvodnje: ", 1900, DateTime.Now.Year);
+                    Console.WriteLine("Unesite broj mjesta po kategorijama:");
+                    var s = Input.ReadIntRange("Standard: ", 0, 1000);
+                    var b = Input.ReadIntRange("Business: ", 0, 1000);
+                    var v = Input.ReadIntRange("VIP: ", 0, 1000);
+                    Console.Write("Želite li stvarno dodati avion y/n? ");
+                    if (!Confirm()) { Console.WriteLine("Prekinuto."); Input.Pause(); continue; }
+                    var airplane = new Airplane(name, year, s, b, v);
+                    Store.Airplanes.Add(airplane);
+                    Console.WriteLine("Avion dodan. Id: " + airplane.Id);
+                    Input.Pause();
+                }
+                else if (k == "3")
+                {
+                    Console.Clear();
+                    Console.WriteLine("1 - Po id-u\n2 - Po nazivu\n3 - Povratak");
+                    var c = Console.ReadLine();
+                    if (c == "1")
+                    {
+                        var id = Input.ReadGuid("Unesite id: ");
+                        Airplane aFound = null;
+                        foreach (var a in Store.Airplanes) if (a.Id == id) { aFound = a; break; }
+                        if (aFound == null) Console.WriteLine("Ne postoji."); else Console.WriteLine(aFound.FullInfo());
+                        Input.Pause();
+                    }
+                    else if (c == "2")
+                    {
+                        var name = Input.ReadNonEmpty("Unesite naziv: ");
+                        var list = new List<Airplane>();
+                        foreach (var a in Store.Airplanes)
+                        {
+                            if (a.Name.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0) list.Add(a);
+                        }
+                        if (list.Count == 0) Console.WriteLine("Ne postoji."); else foreach (var a in list) Console.WriteLine(a.FullInfo());
+                        Input.Pause();
+                    }
+                }
+                else if (k == "4")
+                {
+                    Console.Clear();
+                    Console.WriteLine("1 - Po id-u\n2 - Po nazivu\n3 - Povratak");
+                    var c = Console.ReadLine();
+                    if (c == "1")
+                    {
+                        var id = Input.ReadGuid("Unesite id: ");
+                        Airplane aFound = null;
+                        foreach (var a in Store.Airplanes) if (a.Id == id) { aFound = a; break; }
+                        if (aFound == null) Console.WriteLine("Ne postoji.");
+                        else
+                        {
+                            Console.Write("Želite li stvarno izbrisati avion y/n? ");
+                            if (Confirm()) { Store.Airplanes.Remove(aFound); Console.WriteLine("Izbrisano."); } else Console.WriteLine("Prekinuto.");
+                        }
+                        Input.Pause();
+                    }
+                    else if (c == "2")
+                    {
+                        var name = Input.ReadNonEmpty("Unesite naziv: ");
+                        var list = new List<Airplane>();
+                        foreach (var a in Store.Airplanes)
+                        {
+                            if (a.Name.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0) list.Add(a);
+                        }
+                        if (list.Count == 0) Console.WriteLine("Ne postoji.");
+                        else
+                        {
+                            foreach (var a in list) Console.WriteLine(a.FullInfo());
+                            var id = Input.ReadGuid("Unesite id točno kojeg želite izbrisati: ");
+                            Airplane a2 = null;
+                            foreach (var aa in list) if (aa.Id == id) { a2 = aa; break; }
+                            if (a2 == null) Console.WriteLine("Ne postoji."); else { Console.Write("Želite li stvarno izbrisati avion y/n? "); if (Confirm()) { Store.Airplanes.Remove(a2); Console.WriteLine("Izbrisano."); } else Console.WriteLine("Prekinuto."); }
+                        }
+                        Input.Pause();
+                    }
+                }
+                else if (k == "5") break;
             }
         }
         static bool Confirm()
