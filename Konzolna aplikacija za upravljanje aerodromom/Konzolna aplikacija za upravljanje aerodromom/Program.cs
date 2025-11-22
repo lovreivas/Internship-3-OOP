@@ -16,7 +16,7 @@ namespace Konzolna_aplikacija_za_upravljanje_aerodromom
                 if (key == "1") PassengersMenu();
                 else if (key == "2") FlightsMenu();
                 else if (key == "3") AirplanesMenu();
-                else if (key == "4") ;// CrewsMenu();
+                else if (key == "4") CrewsMenu();
                 else if (key == "5") break;
             }
         }
@@ -435,6 +435,74 @@ namespace Konzolna_aplikacija_za_upravljanje_aerodromom
                     }
                 }
                 else if (k == "5") break;
+            }
+        }
+        static void CrewsMenu()
+        {
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine("Posada:\n1 - Prikaz svih posada\n2 - Kreiranje nove posade\n3 - Dodavanje osobe\n4 - Povratak");
+                var k = Console.ReadLine();
+                if (k == "1")
+                {
+                    Console.Clear();
+                    foreach (var c in Store.Crews) Console.WriteLine(c.FullInfo());
+                    Input.Pause();
+                }
+                else if (k == "2")
+                {
+                    Console.Clear();
+                    var pilots = new List<CrewMember>();
+                    var copilots = new List<CrewMember>();
+                    var stews = new List<CrewMember>();
+                    foreach (var m in Store.CrewMembers)
+                    {
+                        if (m.Position == Position.Pilot && !Store.IsMemberAssigned(m.Id)) pilots.Add(m);
+                        if (m.Position == Position.Copilot && !Store.IsMemberAssigned(m.Id)) copilots.Add(m);
+                        if ((m.Position == Position.Steward || m.Position == Position.Stewardess) && !Store.IsMemberAssigned(m.Id)) stews.Add(m);
+                    }
+                    if (pilots.Count == 0 || copilots.Count == 0 || stews.Count < 2) { Console.WriteLine("Nema dovoljno slobodnih članova za posadu."); Input.Pause(); continue; }
+                    Console.WriteLine("Dostupni piloti:"); foreach (var p in pilots) Console.WriteLine(p.ShortInfo());
+                    var pid = Input.ReadGuid("Unesite id pilota: ");
+                    CrewMember pilot = null;
+                    foreach (var pm in pilots) if (pm.Id == pid) { pilot = pm; break; }
+                    if (pilot == null) { Console.WriteLine("Nevažeći."); Input.Pause(); continue; }
+                    Console.WriteLine("Dostupni kopiloti:"); foreach (var p in copilots) Console.WriteLine(p.ShortInfo());
+                    var coid = Input.ReadGuid("Unesite id kopilota: ");
+                    CrewMember copilot = null;
+                    foreach (var cm in copilots) if (cm.Id == coid) { copilot = cm; break; }
+                    if (copilot == null) { Console.WriteLine("Nevažeći."); Input.Pause(); continue; }
+                    Console.WriteLine("Dostupne stjuardese/stjuardi:"); foreach (var p in stews) Console.WriteLine(p.ShortInfo());
+                    var s1 = Input.ReadGuid("Unesite id 1. stjuard(esa): ");
+                    var s2 = Input.ReadGuid("Unesite id 2. stjuard(esa): ");
+                    CrewMember st1 = null;
+                    CrewMember st2 = null;
+                    foreach (var sm in stews) { if (sm.Id == s1) st1 = sm; if (sm.Id == s2) st2 = sm; }
+                    if (st1 == null || st2 == null || st1.Id == st2.Id) { Console.WriteLine("Nevažeći odabir."); Input.Pause(); continue; }
+                    Console.Write("Želite li stvarno kreirati posadu y/n? ");
+                    if (!Confirm()) { Console.WriteLine("Prekinuto."); Input.Pause(); continue; }
+                    var crew = new Crew(pilot.Id, copilot.Id, new List<Guid> { st1.Id, st2.Id });
+                    Store.Crews.Add(crew);
+                    Input.Pause();
+                }
+                else if (k == "3")
+                {
+                    Console.Clear();
+                    var fn = Input.ReadName("Ime: ");
+                    var ln = Input.ReadName("Prezime: ");
+                    var y = Input.ReadIntRange("Godina rođenja: ", 1900, DateTime.Now.Year);
+                    Console.WriteLine("Pozicije: Pilot, Copilot, Steward, Stewardess");
+                    var posStr = Input.ReadNonEmpty("Pozicija: ");
+                    if (!Enum.TryParse<Position>(posStr, true, out var pos)) { Console.WriteLine("Nevažeća pozicija."); Input.Pause(); continue; }
+                    Console.Write("Želite li stvarno dodati osobu y/n? ");
+                    if (!Confirm()) { Console.WriteLine("Prekinuto."); Input.Pause(); continue; }
+                    var m = new CrewMember(fn, ln, y, pos);
+                    Store.CrewMembers.Add(m);
+                    Console.WriteLine("Osoba dodana. Id: " + m.Id);
+                    Input.Pause();
+                }
+                else if (k == "4") break;
             }
         }
         static bool Confirm()

@@ -40,8 +40,9 @@ namespace Konzolna_aplikacija_za_upravljanje_aerodromom.Classes
 
         public string ShortInfo()
         {
-            return $"{Id} | {Name} | Polazak: {Departure} | Dolazak: {Arrival} | Dist: {DistanceKm}km";
+            return $"{Id} | {Name} | Polazak: {Departure} | Dolazak: {Arrival} | Trajanje: {DurationHours:F1}h | Dist: {DistanceKm}km";
         }
+
 
         public string FullInfo(DataStore store)
         {
